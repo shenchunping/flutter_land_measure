@@ -3,7 +3,7 @@ import 'package:flutter_land_measure/models/location_point.dart';
 import 'package:flutter_land_measure/models/track_measurement.dart';
 import 'package:flutter_land_measure/services/location_service.dart';
 import 'package:flutter_land_measure/services/robust_location_filter.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
 /// 测量提供者 - 管理测量状态和数据
@@ -79,7 +79,7 @@ class MeasurementProvider extends ChangeNotifier {
         id: _currentMeasurement!.id,
         createdAt: _currentMeasurement!.createdAt,
         completedAt: DateTime.now(),
-        points: _currentMeasurement!.points,
+        points: trackPoints,
         name: _currentMeasurement!.name,
         description: _currentMeasurement!.description,
       );
@@ -124,7 +124,7 @@ class MeasurementProvider extends ChangeNotifier {
       id: _currentMeasurement!.id,
       createdAt: _currentMeasurement!.createdAt,
       completedAt: DateTime.now(),
-      points: _currentMeasurement!.points,
+      points: trackPoints,
       name: _currentMeasurement!.name,
       description: description,
     );
@@ -179,8 +179,8 @@ class MeasurementProvider extends ChangeNotifier {
   LatLng? getMeasurementCenter() {
     if (trackPoints.isEmpty) return null;
     
-    double avgLat = trackPoints.fold(0, (sum, p) => sum + p.latitude) / trackPoints.length;
-    double avgLon = trackPoints.fold(0, (sum, p) => sum + p.longitude) / trackPoints.length;
+    double avgLat = trackPoints.fold(0.0, (sum, p) => sum + p.latitude) / trackPoints.length;
+    double avgLon = trackPoints.fold(0.0, (sum, p) => sum + p.longitude) / trackPoints.length;
     
     return LatLng(avgLat, avgLon);
   }

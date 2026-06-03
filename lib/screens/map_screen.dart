@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:flutter_land_measure/providers/measurement_provider.dart';
-import 'package:flutter_land_measure/services/mapbox_service.dart';
 import 'package:flutter_land_measure/services/tile_source_manager.dart';
 import 'package:flutter_land_measure/models/tile_source.dart';
+import 'package:flutter_land_measure/services/robust_location_filter.dart';
 import 'package:flutter_land_measure/widgets/measurement_info_panel.dart';
 import 'package:flutter_land_measure/widgets/control_panel.dart';
 import 'package:flutter_land_measure/widgets/tile_source_selector.dart';
@@ -17,10 +16,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  final MapboxService _mapboxService = MapboxService();
   final TileSourceManager _tileSourceManager = TileSourceManager();
-  late MapboxMap _mapboxMap;
-  bool _mapReady = false;
   List<TileSource> _tileSources = [];
   TileSource? _currentTileSource;
 
@@ -43,7 +39,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GPS测亩仪 - Mapbox'),
+        title: const Text('GPS测亩仪'),
         elevation: 0,
         actions: [
           // 瓦片源选择按钮
@@ -52,8 +48,7 @@ class _MapScreenState extends State<MapScreen> {
               if (value == 'add_custom') {
                 _showAddCustomTileSourceDialog();
               } else {
-                final source = _tileSources
-                    .firstWhere((s) => s.id == value);
+                final source = _tileSources.firstWhere((s) => s.id == value);
                 await _switchTileSource(source);
               }
             },
@@ -88,8 +83,23 @@ class _MapScreenState extends State<MapScreen> {
       ),
       body: Stack(
         children: [
-          // Mapbox地图
-          _buildMapbox(),
+          // 简单的背景代替地图
+          Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.map, size: 80, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    '地图显示区域',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           // 信息面板
           Positioned(
@@ -111,94 +121,21 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildMapbox() {
-    return Consumer<MeasurementProvider>(
-      builder: (context, provider, _) {
-        return MapboxMap(
-          accessToken: MapboxService.MAPBOX_ACCESS_TOKEN,
-          styleUri: MapboxStyles.MAPBOX_STREETS,
-          initialCameraPosition: const CameraPosition(
-            target: Point(name: '', latitude: 39.9042, longitude: 116.4074),
-            zoom: 18.0,
-          ),
-          onMapCreated: (mapboxMap) async {
-            _mapboxMap = mapboxMap;
-            await _mapboxService.initializeMapbox(mapboxMap);
-            setState(() => _mapReady = true);
-            _updateMapDisplay(provider);
-          },
-          onStyleLoadedCallback: () {
-            setState(() => _mapReady = true);
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _updateMapDisplay(MeasurementProvider provider) async {
-    if (!_mapReady) return;
-
-    try {
-      await _mapboxService.clearDrawings();
-
-      final trackPoints = provider.trackPoints;
-      if (trackPoints.isEmpty) return;
-
-      // 转换为Mapbox Point对象
-      final points = trackPoints
-          .map((p) => Point(
-            name: '',
-            latitude: p.latitude,
-            longitude: p.longitude,
-          ))
-          .toList();
-
-      // 绘制轨迹线
-      if (points.length > 1) {
-        await _mapboxService.addPolyline(
-          'track_line',
-          points,
-          color: Colors.blue,
-          width: 3.0,
-        );
-      }
-
-      // 绘制多边形（如果闭合）
-      if (provider.isClosed && points.length >= 3) {
-        await _mapboxService.addPolygon(
-          'track_polygon',
-          points,
-          fillColor: Colors.blue,
-          outlineColor: Colors.darkBlue,
-          opacity: 0.15,
-        );
-      }
-
-      // 添加点标记
-      for (int i = 0; i < points.length; i++) {
-        final point = points[i];
-        await _mapboxService.addPointAnnotation(
-          'point_$i',
-          point,
-          text: '${i + 1}',
-        );
-      }
-    } catch (e) {
-      print('更新地图显示失败: $e');
-    }
-  }
-
   Future<void> _switchTileSource(TileSource source) async {
     try {
-      await _mapboxService.switchTileSource(source);
       setState(() => _currentTileSource = source);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已切换到${source.name}')),
-      );
+      await _tileSourceManager.setActiveTileSource(source.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已切换到${source.name}')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('切换失败: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('切换失败: $e')),
+        );
+      }
     }
   }
 
@@ -209,8 +146,7 @@ class _MapScreenState extends State<MapScreen> {
         onAdd: (source) async {
           try {
             // 验证瓦片源
-            final isValid =
-                await _tileSourceManager.validateTileSource(source);
+            final isValid = await _tileSourceManager.validateTileSource(source);
             if (!isValid) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -236,9 +172,11 @@ class _MapScreenState extends State<MapScreen> {
               );
             }
           } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('添加失败: $e')),
-            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('添加失败: $e')),
+              );
+            }
           }
         },
       ),
@@ -251,7 +189,7 @@ class _MapScreenState extends State<MapScreen> {
         return MeasurementInfoPanel(
           provider: provider,
           onFilterModeChanged: (_) {},
-          filterMode: null,
+          filterMode: FilterMode.walking,
         );
       },
     );

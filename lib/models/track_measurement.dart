@@ -57,10 +57,11 @@ class TrackMeasurement {
     // 转换为面积 (需要结合投影)
     // 此处为近似计算，实际应使用高斯克吕格投影
     double area = (total.abs() / 2);
-    
+
     // 近似转换为平方米 (在赤道附近)
     // 1度纬度约111km, 1度经度约111km*cos(latitude)
-    final avgLat = points.fold<double>(0, (sum, p) => sum + p.latitude) / points.length;
+    final avgLat =
+        points.fold<double>(0, (sum, p) => sum + p.latitude) / points.length;
     final latMeters = 111000; // 1度纬度约111km
     final lonMeters = 111000 * _cosApprox(avgLat);
 
@@ -76,9 +77,10 @@ class TrackMeasurement {
   /// 获取轨迹的中心点
   LocationPoint? get centerPoint {
     if (points.isEmpty) return null;
-    double avgLat = points.fold(0, (sum, p) => sum + p.latitude) / points.length;
+    double avgLat =
+        points.fold(0.0, (sum, p) => sum + p.latitude) / points.length;
     double avgLon =
-        points.fold(0, (sum, p) => sum + p.longitude) / points.length;
+        points.fold(0.0, (sum, p) => sum + p.longitude) / points.length;
     return LocationPoint(
       latitude: avgLat,
       longitude: avgLon,
@@ -95,8 +97,8 @@ class TrackMeasurement {
       for (int j = i + 2; j < points.length - 1; j++) {
         if (i == 0 && j == points.length - 2) continue; // 跳过首尾边
 
-        if (_doSegmentsIntersect(points[i], points[i + 1], points[j],
-            points[j + 1])) {
+        if (_doSegmentsIntersect(
+            points[i], points[i + 1], points[j], points[j + 1])) {
           return true;
         }
       }

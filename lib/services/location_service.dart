@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_land_measure/models/location_point.dart';
 import 'package:flutter_land_measure/services/robust_location_filter.dart';
 
@@ -75,10 +75,9 @@ class LocationService {
     _trackPoints.clear();
 
     // 配置位置请求
-    const LocationSettings locationSettings = LocationSettings(
+    const locationSettings = LocationSettings(
       accuracy: LocationAccuracy.best,
       distanceFilter: 3, // 最小3米位移
-      timeLimit: Duration(seconds: 30), // 30秒超时
     );
 
     // 监听位置更新
@@ -134,10 +133,7 @@ class LocationService {
   Future<LocationPoint?> getCurrentLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 10),
-        ),
+        desiredAccuracy: LocationAccuracy.best,
       );
 
       return LocationPoint(

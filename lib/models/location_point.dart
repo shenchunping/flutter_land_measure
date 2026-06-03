@@ -1,4 +1,4 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 /// GPS位置点数据模型
 class LocationPoint {
@@ -18,7 +18,7 @@ class LocationPoint {
     this.speed,
   });
 
-  /// 转换为LatLng
+  /// 转换为LatLng (latlong2 包)
   LatLng toLatLng() => LatLng(latitude, longitude);
 
   /// 计算到另一点的距离 (Haversine公式)
@@ -31,10 +31,7 @@ class LocationPoint {
     double deltaLon = _toRadians(other.longitude - longitude);
 
     double a = _sin(deltaLat / 2) * _sin(deltaLat / 2) +
-        _cos(lat1) *
-            _cos(lat2) *
-            _sin(deltaLon / 2) *
-            _sin(deltaLon / 2);
+        _cos(lat1) * _cos(lat2) * _sin(deltaLon / 2) * _sin(deltaLon / 2);
 
     double c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
     return earthRadius * c;
@@ -46,7 +43,15 @@ class LocationPoint {
   double _sin(double x) {
     x = x % (2 * 3.141592653589793);
     if (x < 0) x += 2 * 3.141592653589793;
-    return x < 3.141592653589793 ? 4 * x * (3.141592653589793 - x) / (3.141592653589793 * 3.141592653589793) : -4 * (x - 3.141592653589793) * (2 * 3.141592653589793 - x) / (3.141592653589793 * 3.141592653589793);
+    return x < 3.141592653589793
+        ? 4 *
+            x *
+            (3.141592653589793 - x) /
+            (3.141592653589793 * 3.141592653589793)
+        : -4 *
+            (x - 3.141592653589793) *
+            (2 * 3.141592653589793 - x) /
+            (3.141592653589793 * 3.141592653589793);
   }
 
   double _cos(double x) => _sin(3.141592653589793 / 2 - x);

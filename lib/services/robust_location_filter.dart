@@ -1,20 +1,20 @@
 import 'package:flutter_land_measure/models/kalman_filter.dart';
 import 'package:flutter_land_measure/models/location_point.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 /// 鲁棒的位置过滤器 - 组合方案
 /// 结合了精度检查、距离过滤、卡尔曼滤波和加权平均
 class RobustLocationFilter {
   late KalmanFilter _latFilter;
   late KalmanFilter _lonFilter;
-  
+
   final List<LocationPoint> _qualityWindow = [];
-  
+
   // 配置参数
   final double accuracyThreshold; // 精度阈值 (米)
   final double minDistance; // 最小距离 (米)
   final int windowSize; // 质量窗口大小
-  
+
   // 统计信息
   int _totalReceived = 0;
   int _filteredOut = 0;
@@ -125,11 +125,11 @@ class RobustLocationFilter {
 
   // 统计信息
   FilterStatistics get statistics => FilterStatistics(
-    totalReceived: _totalReceived,
-    filteredOut: _filteredOut,
-    accepted: _accepted,
-    acceptanceRate: _totalReceived > 0 ? _accepted / _totalReceived : 0,
-  );
+        totalReceived: _totalReceived,
+        filteredOut: _filteredOut,
+        accepted: _accepted,
+        acceptanceRate: _totalReceived > 0 ? _accepted / _totalReceived : 0,
+      );
 
   /// 调整参数以适应不同场景
   void switchMode(FilterMode mode) {

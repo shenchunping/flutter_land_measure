@@ -13,10 +13,6 @@ dependencies:
 
   # 地理位置
   geolocator: ^9.0.2
-  location: ^5.0.1
-
-  # Mapbox地图
-  mapbox_maps_flutter: ^0.6.0
 
   # 状态管理
   provider: ^6.0.0
@@ -24,6 +20,7 @@ dependencies:
   # 数据存储
   sqflite: ^2.3.0
   path: ^1.8.3
+  path_provider: ^2.1.0
 
   # 工具库
   latlong2: ^0.9.1

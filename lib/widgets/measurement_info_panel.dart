@@ -58,23 +58,23 @@ class MeasurementInfoPanel extends StatelessWidget {
             const SizedBox(height: 12),
 
             // 闭合状态和自交检查
-            if (provider.pointCount >= 3) ...[{
-              Row(
-                children: [
-                  _buildStatusBadge(
-                    '闭合',
-                    provider.isClosed,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatusBadge(
-                    '自交',
-                    provider.currentMeasurement?.isSelfIntersecting ?? false,
-                    isError: true,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            }],
+      if (provider.pointCount >= 3) ...[
+        Row(
+          children: [
+            _buildStatusBadge(
+              '闭合',
+              provider.isClosed,
+            ),
+            const SizedBox(width: 8),
+            _buildStatusBadge(
+              '自交',
+              provider.currentMeasurement?.isSelfIntersecting ?? false,
+              isError: true,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
 
             // 过滤统计信息
             _buildFilterStatistics(),

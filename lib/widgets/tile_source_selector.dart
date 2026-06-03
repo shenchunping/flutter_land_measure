@@ -146,34 +146,34 @@ class _AddCustomTileSourceDialogState extends State<AddCustomTileSourceDialog> {
 
             // 缩放级别范围
             Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: '最小缩放',
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _minZoom = int.tryParse(value) ?? 0;
-                    },
-                    initialValue: '$_minZoom',
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: TextEditingController(text: '$_minZoom'),
+                  decoration: const InputDecoration(
+                    labelText: '最小缩放',
                   ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _minZoom = int.tryParse(value) ?? 0;
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: '最大缩放',
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _maxZoom = int.tryParse(value) ?? 18;
-                    },
-                    initialValue: '$_maxZoom',
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: TextEditingController(text: '$_maxZoom'),
+                  decoration: const InputDecoration(
+                    labelText: '最大缩放',
                   ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _maxZoom = int.tryParse(value) ?? 18;
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
             // 帮助信息
             Padding(
